@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  --color-border: #e5e5e5;
+  --color-background: #ffffff;
+  --color-foreground: #0a0a0a;
+  --color-card: #ffffff;
+  --color-card-foreground: #0a0a0a;
+  --color-muted: #f5f5f5;
+  --color-muted-foreground: #737373;
+  --color-primary: #1E3A5F;
+  --color-primary-foreground: #fafafa;
+  --color-accent: #38BDF8;
+  --color-destructive: #ef4444;
+  
+  --radius-lg: 0.625rem;
+  --radius-md: calc(0.625rem - 2px);
+  --radius-sm: calc(0.625rem - 4px);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}
+/* Animación de entrada escalonada para las tarjetas del feed */
+.card-enter-active {
+  transition: all 0.4s ease-out;
+  transition-delay: calc(var(--i, 0) * 0.05s);
+}
+.card-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* Animación del overlay negro del diálogo */
+.dialog-overlay-enter-active, .dialog-overlay-leave-active {
+  transition: opacity 0.25s ease;
+}
+.dialog-overlay-enter-from, .dialog-overlay-leave-to {
+  opacity: 0;
+}
+
+/* Animación de zoom de la tarjeta blanca del diálogo */
+.dialog-panel-enter-active, .dialog-panel-leave-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.dialog-panel-enter-from, .dialog-panel-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}

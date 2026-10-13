@@ -1,0 +1,48 @@
+stages:
+  - deploy
+
+# Despliegue a la VPS existente (llave en base64 en SSH_PRIVATE_KEY).
+deploy_vps:
+  stage: deploy
+  image: node:22-alpine
+  only:
+    - main
+  before_script:
+    - npm install -g pnpm
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | base64 -d > /tmp/ssh_key
+    - chmod 400 /tmp/ssh_key
+    - ssh-add /tmp/ssh_key
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+  script:
+    - pnpm install
+    - VITE_API_URL=/api pnpm run build
+    - ssh $SSH_USER@$SSH_HOST "mkdir -p /opt/venturia-front/dist"
+    - scp -r dist/. $SSH_USER@$SSH_HOST:/opt/venturia-front/dist/
+    - ssh $SSH_USER@$SSH_HOST "docker compose -f /opt/venturia/docker-compose.prod.yml restart nginx"
+
+# Despliegue a la instancia EC2 de producción (AWS).
+# AWS_SSH_KEY es la llave privada codificada en base64 (evita corrupción por
+# saltos de línea CRLF); se decodifica en el runner antes de usarla.
+deploy_ec2:
+  stage: deploy
+  image: node:22-alpine
+  only:
+    - main
+  before_script:
+    - npm install -g pnpm
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$AWS_SSH_KEY" | base64 -d > /tmp/aws_key
+    - chmod 400 /tmp/aws_key
+    - ssh-add /tmp/aws_key
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+  script:
+    - pnpm install
+    - VITE_API_URL=/api pnpm run build
+    - ssh $EC2_USER@$EC2_HOST "mkdir -p /opt/venturia-front/dist"
+    - scp -r dist/. $EC2_USER@$EC2_HOST:/opt/venturia-front/dist/
+    - ssh $EC2_USER@$EC2_HOST "docker compose -f /opt/venturia/docker-compose.prod.yml restart nginx"
